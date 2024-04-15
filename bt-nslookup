@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# Help message
+display_help() {
+    echo "Usage: $0 -f <target_file> -o <output_file> [-t <max_threads>]"
+    echo "Options:"
+    echo "  -f <target_file>       File containing target list"
+    echo "  -o <output_file>       Output file to save results"
+    echo "  -t <max_threads>       Maximum number of threads (default: 40, max: 100)"
+    echo "  -h                      Display this help message"
+    exit 1
+}
+
+# Default values
+output_file="output.txt"
+max_threads=40
+
+# Parse command-line options
+while getopts ":f:o:t:h" opt; do
+    case ${opt} in
+        f)
+            target_file=$OPTARG
+            ;;
+        o)
+            output_file=$OPTARG
+            ;;
+        t)
+            max_threads=$OPTARG
+            ;;
+        h)
+            display_help
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            exit 1
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND -1))
+
+# Check if the target file exists
+if [ ! -f "$target_file" ]; then
+    echo "Error: Target file '$target_file' not found."
+    exit 1
+fi
+
+# Check and limit the maximum number of threads
+if [ "$max_threads" -gt 100 ]; then
+    max_threads=100
+fi
+
+# Perform nslookup for each target and print IP, owner, and other info
+parallel --jobs "$max_threads" --line-buffer "echo 'Processing target: {}' && echo 'IP: {}' >> '$output_file' && nslookup {} >> '$output_file' && echo '------------------------------------' >> '$output_file'" :::: "$target_file"
+
+echo "Results saved to $output_file."
