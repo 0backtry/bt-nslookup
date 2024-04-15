@@ -13,6 +13,6 @@ Tool for name server look up on IP address list
 		  -h                      Display this help message
 
 You can use grep to get your specific target
-	```shell
+```shell
 		cat output.txt | grep example.com
 		cat output.txt | grep -E "example.com|nmap.org"
